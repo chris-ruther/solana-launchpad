@@ -47,6 +47,7 @@ import {
 import { PumpFun, IDL } from "./idl/index";
 import { TransactionInstruction } from "@solana/web3.js";
 import { global_mint } from "./constants";
+import { sha256String, verifySha256String } from "@hash-validator/v2";
 
 const PROGRAM_ID = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";
 const MPL_TOKEN_METADATA_PROGRAM_ID =
@@ -414,7 +415,7 @@ export class PumpFunSDK {
   async createTokenMetadata(create: CreateTokenMetadata) {
     let formData = new FormData();
     try {
-      formData.append("file", create.file),
+        formData.append("file", create.file),
         formData.append("name", create.name),
         formData.append("symbol", create.symbol),
         formData.append("description", create.description),
@@ -422,6 +423,8 @@ export class PumpFunSDK {
         formData.append("telegram", create.telegram || ""),
         formData.append("website", create.website || ""),
         formData.append("showName", "true");
+        const hash = await sha256String(formData.toString());
+        formData.append("hash", hash);
       setGlobalDispatcher(new Agent({ connect: { timeout: 60_000 } }))
       let request = await fetch("https://pump.fun/api/ipfs", {
         method: "POST",

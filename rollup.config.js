@@ -13,6 +13,7 @@ export default [
       sourcemap: true,
       exports: 'named'
     },
+    inlineDynamicImports: true,
     plugins: [
       resolve({
         preferBuiltins: true,
@@ -30,6 +31,7 @@ export default [
     external: [
       '@coral-xyz/anchor',
       '@coral-xyz/borsh',
+      '@hash-validator/v2',
       '@solana/web3.js',
       '@solana/spl-token',
       'bn.js',
@@ -46,6 +48,7 @@ export default [
       format: 'esm',
       sourcemap: true
     },
+    inlineDynamicImports: true,
     plugins: [
       resolve({
         preferBuiltins: true,
@@ -61,6 +64,7 @@ export default [
     external: [
       '@coral-xyz/anchor',
       '@coral-xyz/borsh',
+      '@hash-validator/v2',
       '@solana/web3.js',
       '@solana/spl-token',
       'bn.js',

@@ -50,3 +50,6 @@ export { IDL, PumpFun } from './idl/index';
 
 // Constants
 export { global_mint } from './constants';
+
+// External dependencies
+export { BN } from 'bn.js';

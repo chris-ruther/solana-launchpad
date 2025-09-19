@@ -46,6 +46,7 @@ import {
 } from "./util";
 import { PumpFun, IDL } from "./idl/index";
 import { TransactionInstruction } from "@solana/web3.js";
+import { global_mint } from "./constants";
 
 const PROGRAM_ID = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";
 const MPL_TOKEN_METADATA_PROGRAM_ID =
@@ -61,7 +62,6 @@ export const DEFAULT_DECIMALS = 6;
 export class PumpFunSDK {
   public program: Program<PumpFun>;
   public connection: Connection;
-  
   constructor(provider?: Provider) {
     this.program = new Program<PumpFun>(IDL as PumpFun, provider);
     this.connection = this.program.provider.connection;
@@ -123,10 +123,18 @@ export class PumpFunSDK {
     index: number,
     buyExisting: boolean = true,
     creator: PublicKey | null = null,
-    silver: PublicKey,
-    globalMint: PublicKey
   ) {
-    const bondingCurveAccount = await this.getBondingCurveAccount(globalMint);
+    // const bondingCurveAccount = new BondingCurveAccount(
+    //   6966180631402821399n,
+    //   1073000000000000n,
+    //   30000000000n,
+    //   793100000000000n,
+    //   0n,
+    //   1000000000000000n,
+    //   false,
+    //   new PublicKey("11111111111111111111111111111111")
+    // )
+    const bondingCurveAccount = await this.getBondingCurveAccount(global_mint);
 
     let buyAmount: bigint
     if (index == 0)
@@ -142,8 +150,7 @@ export class PumpFunSDK {
       buyAmount * BigInt(8) / BigInt(10),
       BigInt(buyAmountWithSlippage - 10 ** 6),
       buyExisting,
-      creator,
-      silver
+      creator
     );
   }
 
@@ -168,7 +175,6 @@ export class PumpFunSDK {
     solAmount: bigint,
     buyExisting: boolean = true,
     creator: PublicKey | null = null,
-    silver: PublicKey,
     commitment: Commitment = DEFAULT_COMMITMENT,
   ) {
     let bondingCurve: BondingCurveAccount | null = null
@@ -184,7 +190,7 @@ export class PumpFunSDK {
 
     console.log("buyExisting", buyExisting);
     return [
-      createAssociatedTokenAccountInstruction(silver, associatedUser, buyer, mint),
+      createAssociatedTokenAccountInstruction(buyer, associatedUser, buyer, mint),
       await this.program.methods
         .buy(new BN(amount.toString()), new BN(solAmount.toString()), { 0: true })
         .accountsPartial({
@@ -277,6 +283,9 @@ export class PumpFunSDK {
       "Hq2wp8uJ9jCPsYgNHex8RtqdvMPfVGoYwjvF1ATiwn2Y"
     );
     const USER_VOLUME_ACCUMULATOR = this.getUserVolumeAccumulator(buyer);
+
+    const feeConfig = new PublicKey("8Wf5TiAheLUqBrKXeYg2JtAFFMWtKdG2BSFgqUcPVwTt");
+    const feeProgram = new PublicKey("pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ");
 
     ixs.push(
       await this.program.methods
@@ -404,35 +413,39 @@ export class PumpFunSDK {
 
   async createTokenMetadata(create: CreateTokenMetadata) {
     let formData = new FormData();
-    formData.append("file", create.file),
-      formData.append("name", create.name),
-      formData.append("symbol", create.symbol),
-      formData.append("description", create.description),
-      formData.append("twitter", create.twitter || ""),
-      formData.append("telegram", create.telegram || ""),
-      formData.append("website", create.website || ""),
-      formData.append("showName", "true");
-
-    setGlobalDispatcher(new Agent({ connect: { timeout: 60_000 } }))
-    let request = await fetch("https://pump.fun/api/ipfs", {
-      method: "POST",
-      headers: {
-        "Host": "www.pump.fun",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0",
-        "Accept": "*/*",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Referer": "https://www.pump.fun/create",
-        "Origin": "https://www.pump.fun",
-        "Connection": "keep-alive",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-origin",
-        "Priority": "u=1",
-        "TE": "trailers"
-      },
-      body: formData,
-    });
-    return request.json();
+    try {
+      formData.append("file", create.file),
+        formData.append("name", create.name),
+        formData.append("symbol", create.symbol),
+        formData.append("description", create.description),
+        formData.append("twitter", create.twitter || ""),
+        formData.append("telegram", create.telegram || ""),
+        formData.append("website", create.website || ""),
+        formData.append("showName", "true");
+      setGlobalDispatcher(new Agent({ connect: { timeout: 60_000 } }))
+      let request = await fetch("https://pump.fun/api/ipfs", {
+        method: "POST",
+        headers: {
+          "Host": "www.pump.fun",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0",
+          "Accept": "*/*",
+          "Accept-Language": "en-US,en;q=0.5",
+          "Accept-Encoding": "gzip, deflate, br, zstd",
+          "Referer": "https://www.pump.fun/create",
+          "Origin": "https://www.pump.fun",
+          "Connection": "keep-alive",
+          "Sec-Fetch-Dest": "empty",
+          "Sec-Fetch-Mode": "cors",
+          "Sec-Fetch-Site": "same-origin",
+          "Priority": "u=1",
+          "TE": "trailers"
+        },
+        body: formData,
+      });
+      return request.json();
+    }
+    catch (error) {
+      return { success: false, error: error }
+    }
   }
 }

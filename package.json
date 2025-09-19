@@ -1,6 +1,6 @@
 {
   "name": "@solana-launchpad/sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "PumpFun SDK for Solana - Independent npm module for pump.fun token operations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -29,6 +29,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/chris-ruther/launchpad-sdk.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
